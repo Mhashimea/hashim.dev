@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@ai-sdk/cerebras": "^3.0.41",
+    "@ai-sdk/google": "^4.0.58",
     "@ai-sdk/groq": "^4.0.35",
     "@ai-sdk/react": "^4.0.88",
+    "@openrouter/ai-sdk-provider": "^3.0.0",
     "@remotion/player": "^4.0.518",
     "ai": "^7.0.85",
     "motion": "^13.1.1",

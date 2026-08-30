@@ -1,9 +1,39 @@
+import { groq } from "@ai-sdk/groq";
+import { google } from "@ai-sdk/google";
 import { cerebras } from "@ai-sdk/cerebras";
-import { streamText, convertToModelMessages, stepCountIs, tool, type UIMessage } from "ai";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import {
+  streamText,
+  convertToModelMessages,
+  stepCountIs,
+  tool,
+  type LanguageModel,
+  type UIMessage,
+} from "ai";
 import { z } from "zod";
 import { SYSTEM_PROMPT } from "@/lib/persona";
 
 export const maxDuration = 30;
+
+/* Use whichever free provider has a key set (add just one). */
+function resolveModel(): LanguageModel | null {
+  if (process.env.OPENROUTER_API_KEY) {
+    const or = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
+    // Primary + fallbacks: OpenRouter auto-routes to the next if a free pool is
+    // rate-limited. All non-reasoning models (no chain-of-thought leaking into chat).
+    return or.chat("google/gemma-4-31b-it:free", {
+      models: [
+        "google/gemma-4-31b-it:free",
+        "google/gemma-4-26b-a4b-it:free",
+        "minimax/minimax-m3:free",
+      ],
+    });
+  }
+  if (process.env.GROQ_API_KEY) return groq("llama-3.3-70b-versatile");
+  if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) return google("gemini-2.0-flash");
+  if (process.env.CEREBRAS_API_KEY) return cerebras("gpt-oss-120b");
+  return null;
+}
 
 /* ---- tiny per-instance rate limit (MVP; swap for Upstash/CF in prod) ---- */
 const hits = new Map<string, number[]>();
@@ -58,15 +88,16 @@ export async function POST(req: Request) {
     return new Response("Bad request", { status: 400 });
   }
 
-  if (!process.env.CEREBRAS_API_KEY) {
+  const model = resolveModel();
+  if (!model) {
     return new Response(
-      "The chat isn't switched on yet (missing CEREBRAS_API_KEY). In the meantime, email me at hashimea@outlook.com!",
+      "The chat isn't switched on yet (no LLM key set). In the meantime, email me at hashimea@outlook.com!",
       { status: 503 },
     );
   }
 
   const result = streamText({
-    model: cerebras("llama-3.3-70b"),
+    model,
     system: SYSTEM_PROMPT,
     messages: await convertToModelMessages(messages),
     temperature: 0.6,
