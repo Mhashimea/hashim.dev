@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+/* ============================================================
+   hashim.dev — "The Agent Workshop"
+   Warm illustrated identity over engineering-precise UI.
+   ============================================================ */
+
+@theme {
+  /* Palette — deep warm ink + parchment + marigold/teal duo */
+  --color-ink: #14110e; /* background: warm near-black */
+  --color-ink-soft: #1b1712; /* raised surface */
+  --color-ink-card: #211c16; /* cards */
+  --color-line: #352e26; /* hairline dividers */
+  --color-line-soft: #29241d;
+
+  --color-cream: #ede6da; /* primary text */
+  --color-cream-dim: #a89c8a; /* muted text */
+  --color-cream-faint: #6f6656; /* faintest labels */
+
+  --color-marigold: #e8a33d; /* signature warm accent */
+  --color-marigold-deep: #c9832a;
+  --color-teal: #3fb9a6; /* cool AI pop */
+  --color-terracotta: #d9663f; /* rare highlight */
+
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-instrument);
+  --font-mono: var(--font-jetbrains);
+}
+
+/* Base */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  /* subtle warm paper grain + vignette so flat dark never feels dead */
+  background-color: var(--color-ink);
+  background-image:
+    radial-gradient(
+      120% 80% at 78% -5%,
+      rgba(232, 163, 61, 0.08) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      90% 60% at 8% 105%,
+      rgba(63, 185, 166, 0.05) 0%,
+      transparent 55%
+    );
+  background-attachment: fixed;
+}
+
+/* Focus — visible, on-brand */
+:focus-visible {
+  outline: 2px solid var(--color-marigold);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+::selection {
+  background: rgba(232, 163, 61, 0.3);
+}
+
+/* Display type helper — Fraunces with high optical size + soft */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-variation-settings: "SOFT" 40;
+  letter-spacing: -0.015em;
+}
+
+/* Mono eyebrow / label utility */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-marigold);
+}
+
+/* Hairline utility */
+.hairline {
+  border-color: var(--color-line);
+}
+
+/* Thin custom scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
