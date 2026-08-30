@@ -56,7 +56,7 @@ async function sendLeadEmail(lead: { name: string; email: string; summary: strin
     return;
   }
   try {
-    await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -67,6 +67,8 @@ async function sendLeadEmail(lead: { name: string; email: string; summary: strin
         text: `Name: ${lead.name}\nEmail: ${lead.email}\n\nWhat they need:\n${lead.summary}\n\n— captured by the AI chat on hashim.dev`,
       }),
     });
+    if (res.ok) console.log(`[lead] emailed to ${to} for ${lead.name}`);
+    else console.error("[lead] email failed:", res.status, await res.text());
   } catch (err) {
     console.error("[lead] email failed:", err);
   }
