@@ -1,4 +1,4 @@
-import { groq } from "@ai-sdk/groq";
+import { cerebras } from "@ai-sdk/cerebras";
 import { streamText, convertToModelMessages, stepCountIs, tool, type UIMessage } from "ai";
 import { z } from "zod";
 import { SYSTEM_PROMPT } from "@/lib/persona";
@@ -58,15 +58,15 @@ export async function POST(req: Request) {
     return new Response("Bad request", { status: 400 });
   }
 
-  if (!process.env.GROQ_API_KEY) {
+  if (!process.env.CEREBRAS_API_KEY) {
     return new Response(
-      "The chat isn't switched on yet (missing GROQ_API_KEY). In the meantime, email me at hashimea@outlook.com!",
+      "The chat isn't switched on yet (missing CEREBRAS_API_KEY). In the meantime, email me at hashimea@outlook.com!",
       { status: 503 },
     );
   }
 
   const result = streamText({
-    model: groq("llama-3.3-70b-versatile"),
+    model: cerebras("llama-3.3-70b"),
     system: SYSTEM_PROMPT,
     messages: await convertToModelMessages(messages),
     temperature: 0.6,
