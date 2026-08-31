@@ -106,7 +106,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
         {children}
-        <ChatWidget />
+        {/* AI chat is hidden for now. Set NEXT_PUBLIC_CHAT_ENABLED=true to bring it back. */}
+        {process.env.NEXT_PUBLIC_CHAT_ENABLED === "true" && <ChatWidget />}
       </body>
     </html>
   );
