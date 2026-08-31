@@ -15,18 +15,19 @@ export function Contact() {
               </h2>
               <p className="mt-6 max-w-md text-lg leading-relaxed text-cream-dim">
                 I take on a small number of freelance and consulting engagements — from a focused build
-                to standing up your agent platform end to end. Ask my AI twin anything, or reach me
-                directly.
+                to standing up your agent platform end to end. Let&apos;s connect.
               </p>
             </Reveal>
 
             <Reveal delay={0.1}>
               <div className="mt-9 flex flex-wrap items-center gap-3">
                 <a
-                  href="#chat"
+                  href={profile.linkedin}
+                  target="_blank"
+                  rel="noreferrer"
                   className="rounded-full bg-marigold px-6 py-3 text-sm font-semibold text-ink transition-transform hover:-translate-y-0.5"
                 >
-                  Chat with me →
+                  Connect on LinkedIn →
                 </a>
                 <a
                   href={`mailto:${profile.email}?subject=Project%20enquiry`}

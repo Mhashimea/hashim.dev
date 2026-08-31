@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { nav } from "@/lib/data";
+import { nav, profile } from "@/lib/data";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -40,10 +40,12 @@ export function Nav() {
         </div>
 
         <a
-          href="#chat"
+          href={profile.linkedin}
+          target="_blank"
+          rel="noreferrer"
           className="rounded-full bg-marigold px-4 py-1.5 text-sm font-medium text-ink transition-transform hover:-translate-y-0.5"
         >
-          Chat with me
+          Connect
         </a>
       </nav>
     </header>
