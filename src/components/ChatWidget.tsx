@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Avatar } from "./Avatar";
 
 const STARTERS = [
@@ -25,9 +25,16 @@ export function ChatWidget() {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status, error } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/chat" }),
-  });
+  const [conversationId] = useState(() =>
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2),
+  );
+  const transport = useMemo(
+    () => new DefaultChatTransport({ api: "/api/chat", body: { conversationId } }),
+    [conversationId],
+  );
+  const { messages, sendMessage, status, error } = useChat({ transport });
 
   const busy = status === "submitted" || status === "streaming";
 

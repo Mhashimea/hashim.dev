@@ -12,8 +12,22 @@ import {
 } from "ai";
 import { z } from "zod";
 import { SYSTEM_PROMPT } from "@/lib/persona";
+import { sendTelegram } from "@/lib/telegram";
 
 export const maxDuration = 30;
+
+/* Last user message text (for the Telegram feed). */
+function lastUserText(messages: UIMessage[]): string {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role !== "user") continue;
+    return (messages[i].parts as { type: string; text?: string }[])
+      .filter((p) => p.type === "text")
+      .map((p) => p.text ?? "")
+      .join("")
+      .trim();
+  }
+  return "";
+}
 
 /* Use whichever free provider has a key set (add just one). */
 function resolveModel(): LanguageModel | null {
@@ -84,8 +98,9 @@ export async function POST(req: Request) {
   }
 
   let messages: UIMessage[];
+  let conversationId: string | undefined;
   try {
-    ({ messages } = await req.json());
+    ({ messages, conversationId } = await req.json());
   } catch {
     return new Response("Bad request", { status: 400 });
   }
@@ -97,6 +112,8 @@ export async function POST(req: Request) {
       { status: 503 },
     );
   }
+
+  let leadCaptured = false;
 
   const result = streamText({
     model,
@@ -114,10 +131,18 @@ export async function POST(req: Request) {
           summary: z.string().describe("One or two lines: what they're building / need"),
         }),
         execute: async (lead) => {
+          leadCaptured = true;
           await sendLeadEmail(lead);
           return { ok: true };
         },
       }),
+    },
+    // Ping the live Telegram feed after each reply.
+    onFinish: async ({ text }) => {
+      const tag = conversationId ? conversationId.slice(0, 6) : "anon";
+      await sendTelegram(
+        `💬 hashim.dev · chat ${tag}${leadCaptured ? " · 🎯 LEAD" : ""}\n\n👤 ${lastUserText(messages)}\n\n🤖 ${text.trim()}`,
+      );
     },
   });
 
