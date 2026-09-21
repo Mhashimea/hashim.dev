@@ -265,6 +265,6 @@ export const skills: { group: string; items: string[] }[] = [
 export const nav = [
   { href: "#work", label: "Work" },
   { href: "#timeline", label: "Path" },
-  { href: "#writing", label: "Writing" },
+  { href: "/blog", label: "Writing" },
   { href: "#about", label: "About" },
 ];

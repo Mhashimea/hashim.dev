@@ -27,10 +27,9 @@ const channels = [
   {
     label: "Blog",
     handle: "Notes on building agents",
-    meta: "Coming soon",
-    href: "#contact",
+    meta: "Read the latest article",
+    href: "/blog",
     accent: "text-terracotta",
-    soon: true,
   },
   {
     label: "YouTube",
