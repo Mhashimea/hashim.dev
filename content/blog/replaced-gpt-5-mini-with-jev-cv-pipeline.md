@@ -1,5 +1,5 @@
 ---
-title: "I Replaced GPT-5 mini With Jev for One Step in Our CV Pipeline: 9× Faster, 93% Cheaper, Same Accuracy"
+title: "I Replaced GPT-5 mini With Jev for One Step in Our CV Pipeline: 9× Faster, 93% Cheaper, Same Accuracy on Our Test Set"
 description: "The “is this actually a CV?” check: what changed when a decision model replaced an LLM."
 date: "2026-09-21"
 status: ready
@@ -11,7 +11,7 @@ Before, GPT-5 mini would think for about 3.3 seconds and generate around 170 pai
 
 Jev, TypeSafe's new decision model, answers the same question in **0.37 seconds**, and its output tokens are free.
 
-This post covers what I changed, how I tested it without risking real uploads, the numbers, and the two things that surprised me: the cheaper model fixed a bug the expensive one had, and it read Arabic CVs whose text came out of the PDF *backwards*.
+This post covers what I changed, how I tested it without risking real uploads, the numbers, and the two things that surprised me: switching models exposed a bug in our own confidence rule, and it read Arabic CVs whose text came out of the PDF *backwards*.
 
 For the general question of when to use Jev and when to use an LLM, see my guide [Choose the model by the work: Jev vs. an LLM](/blog/when-to-use-jev-vs-an-llm). This post is the hands-on companion: one real swap, measured.
 
@@ -23,10 +23,10 @@ When a recruiter bulk-uploads CVs to our recruitment platform, the first AI step
 
 We used GPT-5 mini for this. It's a reasonable choice for a classification task, but look at what we were paying for:
 
-- **Reasoning tokens.** GPT-5 mini is a reasoning model, and the endpoint won't let you turn reasoning off.
+- **Reasoning tokens.** GPT-5 mini is a reasoning model, and we ran it with its default reasoning, which is billed as output.
 - **JSON syntax**: braces, keys and quotes.
 - **An explanation string**: *"Contains a personal name at top plus email, phone…"*
-- **A confidence number** the model made up to match our prompt's rubric.
+- **A self-reported confidence score** to match our prompt's rubric.
 
 All of that is output, billed at output rates, to produce what is really a single boolean. It also took 3–4 seconds, on every upload.
 
@@ -77,7 +77,7 @@ I didn't just swap one model for the other. I put a small router in front, with 
 
 In `live` mode, two things still go to GPT-5 mini:
 
-1. **Headers that are 15% or more Arabic.** Jev is trained mainly on English, and we're a Gulf-market product, so I didn't want to trust it blind.
+1. **Headers that are 15% or more Arabic.** I haven't seen TypeSafe document Arabic support, and we're a Gulf-market product, so I didn't want to trust it blind.
 2. **Any Jev failure** (timeout, rate limit or unexpected response). No upload is lost; it falls back to GPT-5 mini.
 
 Jev's calls also go through our existing credit ledger, so every call is billed to the right customer, like any other AI call.
@@ -123,11 +123,11 @@ Jev's input is bigger: 774 tokens on average against GPT-5 mini's 505, because t
 
 **Lesson:** for classification, what you pay for is the output, not the input.
 
-### 2. The cheaper model fixed a bug the expensive one had
+### 2. Switching models exposed a bug in our confidence rule
 
 This was the real find. Our upload rule is: *reject the file if the model says it's not a CV **and** its confidence is at least 80.*
 
-With GPT-5 mini, that rule **almost never fired**. Our prompt defined confidence as "how CV-like is this?", so a clear invoice scored about 10. Low confidence meant the file was never rejected. On the job description and the reference letter, though, GPT-5 mini reported 95, meaning "how sure". It wasn't even consistent.
+With GPT-5 mini, that rule **almost never fired**. Our prompt defined confidence as "how CV-like is this?", so a clear invoice scored about 10. Low confidence meant the file was never rejected. On the job description and the reference letter, though, GPT-5 mini reported 95, meaning "how sure". That was our prompt's fault: it gave "confidence" two possible meanings, so the rule couldn't work reliably.
 
 Jev's confidence means one thing: how sure it is of its answer. So the rule finally works as intended:
 
@@ -156,7 +156,7 @@ I want to be precise about what this does and doesn't show.
 
 - **This is one step, not the whole pipeline.** The header check is one of four AI calls per CV. Across the whole pipeline, a CV gets **about 11.5% cheaper and 3.4 seconds faster** (about 15%). The 93% applies to this step.
 - **The test set is small and synthetic.** 31 documents I wrote to cover the edge cases, not a sample of real uploads. The next step is running `shadow` mode on real traffic.
-- **TypeSafe's headline numbers are 193× faster and 444× cheaper. I measured 8.8× and 14.3×.** That's not a contradiction: my baseline was already a small, fast model on a very short task. Expect your ratio to depend on what you're replacing.
+- **TypeSafe's headline numbers (193× faster, 444× cheaper) compare Jev with large frontier models. I measured 8.8× and 14.3×.** That's not a contradiction: my baseline was already a small, fast model on a very short task. Expect your ratio to depend on what you're replacing.
 - **Confidence means something different.** Swapping models changed which files our rule rejects, as described in surprise 2. If you have thresholds tuned to an LLM's self-reported confidence, re-check them.
 - **Two documents couldn't be tested**: a French CV and a payslip. That's not Jev's fault. Our own PDF reader discarded their text because it only trusts text containing common English words. That's a bug I'm fixing separately.
 - **Jev is brand new.** I pinned the model version, and the router falls back to GPT-5 mini on any error.
@@ -168,7 +168,7 @@ Swapping GPT-5 mini for Jev on one step of our CV pipeline gave us:
 - **8.8× faster** (3.3 s → 0.37 s)
 - **93% cheaper** ($0.000464 → $0.0000325 per check)
 - **The same accuracy** (96.8%, zero real CVs rejected)
-- **A working "reject non-CVs" rule**, which the LLM had quietly broken
+- **A "reject non-CVs" rule that finally works as intended** (our prompt had given the LLM's confidence two meanings)
 
 The bigger takeaway isn't about Jev specifically. Go through your AI calls and ask: **how many of them are really yes/no, pick-one or rate-it questions dressed up as text generation?** For those, you may be paying for a paragraph you throw away.
 
