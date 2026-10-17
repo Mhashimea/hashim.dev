@@ -34,8 +34,8 @@ const channels = [
   {
     label: "YouTube",
     handle: "Build-in-public",
-    meta: "Coming soon",
-    href: "#contact",
+    meta: "Concepts explained",
+    href: "https://www.youtube.com/@hashim.builds",
     accent: "text-teal",
     soon: true,
   },
